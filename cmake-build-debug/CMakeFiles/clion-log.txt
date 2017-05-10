@@ -1,1 +1,4 @@
-CMakeLists.txt not found in /home/krzysztof-c/CLionProjects/SO_project/SO_projekt
+/home/krzysztof-c/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/171.4073.41/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/krzysztof-c/CLionProjects/SO_project/SO_projekt
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/krzysztof-c/CLionProjects/SO_project/SO_projekt/cmake-build-debug
