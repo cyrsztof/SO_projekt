@@ -1,6 +1,11 @@
 # SO_projekt
 my university multithreading project for Operating System using pthreads and ncurses in c++ for Linux
 
+## Bibliography:
+- [Multithreading in Linux (polish)](http://m.jedynak.pl/systemy/watki-referat.pdf)
+- [ncurses website](http://www.gnu.org/software/ncurses/ncurses.html)
+- [POSIX Threads (polish)](http://wm.ite.pl/articles/pthreads.pdf)
+
 kryteria zaliczenia projektu:
 Celem projektu jest opracowanie prostej wielowątkowej aplikacji dla systemu Linux, działającej i wizualizującej w środowisku konsolowym swoje działanie. Aplikacja może mieć przeznaczenie praktyczne, ale nie musi - program może po prostu symulować z grubsza jakieś zjawiska czy zachowania, być prostą grą, albo narzędziem do czegoś [temat nie będzie bezpośrednio oceniany, ale nie powinny się one powtarzać]. Proszę zwrócić uwagę, iż zależnie od wyboru tematu, użyteczne może być wprowadzenie losowych opóźnień (np. funkcją usleep()) w celu lepszego zaprezentowania działania opracowanego programu. Dozwolone jest korzystanie z dodatkowych bibliotek, jeśli mają one pomóc w zrealizowaniu czegoś (na przykład czytania plików konfiguracyjnych, obsługi połączeń sieciowych, czy realizacji innych złożonych operacji). Celem zadania jest nauczenie się, jak poprawnie stosować wątki w aplikacjach.
 
