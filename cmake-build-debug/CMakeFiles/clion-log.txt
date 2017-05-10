@@ -1,0 +1,1 @@
+CMakeLists.txt not found in /home/krzysztof-c/CLionProjects/SO_project/SO_projekt
