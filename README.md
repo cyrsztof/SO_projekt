@@ -6,10 +6,10 @@ my university multithreading project for Operating System using pthreads and ncu
 - [ncurses website](http://www.gnu.org/software/ncurses/ncurses.html)
 - [POSIX Threads (polish)](http://wm.ite.pl/articles/pthreads.pdf)
 
-kryteria zaliczenia projektu:
+# Kryteria zaliczenia projektu:
 Celem projektu jest opracowanie prostej wielowątkowej aplikacji dla systemu Linux, działającej i wizualizującej w środowisku konsolowym swoje działanie. Aplikacja może mieć przeznaczenie praktyczne, ale nie musi - program może po prostu symulować z grubsza jakieś zjawiska czy zachowania, być prostą grą, albo narzędziem do czegoś [temat nie będzie bezpośrednio oceniany, ale nie powinny się one powtarzać]. Proszę zwrócić uwagę, iż zależnie od wyboru tematu, użyteczne może być wprowadzenie losowych opóźnień (np. funkcją usleep()) w celu lepszego zaprezentowania działania opracowanego programu. Dozwolone jest korzystanie z dodatkowych bibliotek, jeśli mają one pomóc w zrealizowaniu czegoś (na przykład czytania plików konfiguracyjnych, obsługi połączeń sieciowych, czy realizacji innych złożonych operacji). Celem zadania jest nauczenie się, jak poprawnie stosować wątki w aplikacjach.
 
-Warunki konieczne: 
+# Warunki konieczne: 
 - wykorzystanie języka C lub C++ 
 - wykorzystanie biblioteki pthreads lub std::thread ze standardu C++11 [do obsługi wątków] 
 - wykorzystanie biblioteki ncurses [do budowy interfejsu] 
@@ -18,7 +18,8 @@ Warunki konieczne:
 - zaprezentowanie (omówienie) działającej aplikacji na zajęciach lub konsultacjach 
 - dostarczenie kodu oraz skróconej instrukcji/sprawozdania w formie pliku tekstowego: opis co robi program, jak skompilować i uruchomić
 
-Dodatkowo: (zaczynamy od 2.0 za coś, co spełnia wyżej przedstawione założenia; każdy poniższy punkt liczymy co najwyżej raz, jeśli poprawnie i sensownie go zrealizowano, chyba że wskazano inaczej; do maksymalnej oceny 5.0 za projekt; lista może ulec ewentualnym drobnym korektom - o czym poinformuję na zajęciach) 
+# Dodatkowo: 
+(zaczynamy od 2.0 za coś, co spełnia wyżej przedstawione założenia; każdy poniższy punkt liczymy co najwyżej raz, jeśli poprawnie i sensownie go zrealizowano, chyba że wskazano inaczej; do maksymalnej oceny 5.0 za projekt; lista może ulec ewentualnym drobnym korektom - o czym poinformuję na zajęciach) 
 - wykorzystanie muteksów (semaforów binarnych) [+0.25] 
 - wykorzystanie zmiennych warunkowych [+0.25] 
 - tworzenie wątków (zgodnie ze sztuką, z przekazaniem parametrów lub bez) [+0.25] 
@@ -38,5 +39,6 @@ Dodatkowo: (zaczynamy od 2.0 za coś, co spełnia wyżej przedstawione założen
 - utworzenie pliku Makefile, aby ułatwić kompilację, testowanie i czyszczenie środowiska [+0.25] 
 - utworzenie sprawozdania jako pliku tekstowego w formacie markdown (rozszerzenie .md)** [+0.25] 
 - nietuzinkowe rozwiązanie, ciekawe spostrzeżenie [bonus +0.25 za każde wskazanie, maksymalnie dwa brane pod uwagę]
-* drobna uwaga co do wycieków z ncurses: http://invisible-island.net/ncurses/ncurses.faq.html… 
-** możliwe jest wtedy generowanie PDFa: https://kevin.deldycke.com/…/…/how-to-generate-pdf-markdown/
+
+* *drobna uwaga co do wycieków z ncurses: http://invisible-island.net/ncurses/ncurses.faq.html… 
+* **możliwe jest wtedy generowanie PDFa: https://kevin.deldycke.com/…/…/how-to-generate-pdf-markdown/
