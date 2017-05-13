@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++11  -lpanel -lcurses -pthread  -g   CMakeFiles/SO_projekt.dir/main.cpp.o  -o SO_projekt 

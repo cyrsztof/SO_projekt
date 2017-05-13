@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/krzysztof-c/CLionProjects/SO_project/SO_projekt/main.cpp
+pthread.h
+-
+iostream
+-
+cstdlib
+-
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+errno.h
+-
+unistd.h
+-
+time.h
+-
+sys/select.h
+-
+ncurses.h
+-
+
