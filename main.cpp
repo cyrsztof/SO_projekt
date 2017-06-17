@@ -1,169 +1,170 @@
-//
-// Created by krzysztof-c on 10.05.17.
-//
-#include <pthread.h>
 #include <iostream>
-#include <cstdlib>
-#include <stdio.h>
+#include <unistd.h>
+#include "locale.h"
+#include <ncursesw/ncurses.h>
+#include "time.h"
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/select.h>
-#include <ncurses.h>
+#include "string"
+#include "vector"
+#include <sstream>
 
-/* pthread_create (thread, attr, start_routine, arg)
- *
- * pthread_create creates new thread,
- * "thread" - unique identifier for the new thread
- * "attr" - opaque attribute object to set thread attributes, NULL for default
- * "start_routine" - the C++ routine that the thread will execute once it is created
- * "arg" - single argument that may be passed to start_routine. It must be passed by
- *         reference as a pointer cast of type void. NULL may be used if no argument is to be passed.
- *
- * */
-
-
-
-/*  struct to store curses info for cleanup  */
-
-struct curinfo {
-    WINDOW * main_window;
-    int old_cursor;
-};
-
-/*  curses helper functions  */
-
-void start_curses(struct curinfo * info);
-void stop_curses(struct curinfo * info);
-
-
-/*  main function  */
-
-int main(int argc, char * argv[])
+namespace patch         //small patch for std::string, since it wasn't working with my compiler
 {
-    /*  Set default timeout  */
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
 
-    int secs = 0;
-    int usecs = 500000;
 
-    /*  Set timeout based on command line args, if provided  */
+int map[9][9];          //0 - nothing, 1 - ant, 2 - food, ...
+void boxAround( int y, int x, int h, int w );
+void printMap(int mapCornerWidth, int mapCornerHeight);
+class ant {
+    int age;
+    bool food;
+    int gender;
+    int antPositionX;
+    int antPositionY;
 
-    if ( argc > 1 ) {
-        if ( !strcmp(argv[1], "veryshort") ) {
-            secs = 0;
-            usecs = 200000;
-        }
-        else if ( !strcmp(argv[1], "short") ) {
-            secs = 1;
-            usecs = 0;
-        }
-        else if ( !strcmp(argv[1], "medium") ) {
-            secs = 2;
-            usecs = 0;
-        }
-        else if ( !strcmp(argv[1], "long") ) {
-            secs = 5;
-            usecs = 0;
-        }
+public:
+    ant (int age = 0,    // ant is aging
+         bool food = 0,  // ant collects food
+         int gender = 0, // 0 female, 1 male
+         int antPositionX = 0,
+         int antPositionY = 0
+        )
+    {
+        gender = rand() %2;
+        antPositionX = rand()%10;
+        antPositionY = rand()%10;
+
+        this->age = age;
+        this->food = food;
+        this->gender = gender;
+        this->antPositionX = antPositionX;
+        this->antPositionY = antPositionY;
     }
 
-    struct curinfo cinfo;
-    start_curses(&cinfo);
-
-    int input = '0';        /*  Set to something printable  */
-    int num_sel = 0;        /*  Number of times select() has returned  */
-
-    while ( input != 'q' && input != 'Q' ) {
-
-        /*  Output messages  */
-
-        mvprintw(3, 3, "select() has returned %d times", num_sel);
-        mvprintw(4, 3, "Last character input was %c", input);
-        mvprintw(5, 3, "Press 'q' to quit");
-        refresh();
-
-        /*  select() modifies the fd_sets passed to it,
-         *  so zero and set them prior to each call.     */
-
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(STDIN_FILENO, &fds);
-
-        /*  Same deal for the struct timeval, select() may
-         *  modify it, it may not, so recreate to be portable.  */
-
-        struct timeval tv;
-        tv.tv_sec = secs;
-        tv.tv_usec = usecs;
-
-        /*  Store the return so we can check it  */
-
-        int status = select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
-
-        /*  Check for error  */
-
-        if ( status == -1 ) {
-
-            /*  select() returned with an error.  */
-
-            if ( errno != EINTR ) {
-
-                /*  If interrupted by a signal, no problem,
-                 *  keep going. Otherwise, let's just quit.  */
-
-                stop_curses(&cinfo);
-                perror("error calling select()");
-                return EXIT_FAILURE;
-            }
-        }
-        else if ( FD_ISSET(STDIN_FILENO, &fds) ) {
-
-            /*  Only call getch() if input is ready.
-             *  getch() will not block when we do it this way.  */
-
-            if ( (input = getch()) == ERR ) {
-                stop_curses(&cinfo);
-                fprintf(stderr, "ERR returned from getch()\n");
-                return EXIT_FAILURE;
-            }
-        }
-
-        /*  Increment number of times select() has returned  */
-
-        ++num_sel;
+    int getAge() {
+        return age;
     }
 
-    stop_curses(&cinfo);
+    bool hasFood() {
+        return food;
+    }
+
+    int getGender() {
+        return gender;
+    }
+
+    int getPositionAntX() {
+        return antPositionX;
+    }
+    int getPositionAntY() {
+        return antPositionY;
+    }
+
+    void addFood() {
+        food = 1;
+    }
+    void removeFood() {
+        food = 0;
+    }
+
+};
+std::vector <ant> antsVector;
+void startMenu();
+int width = 0;
+int height = 0;
+
+
+int main (void) {
+    srand(time(NULL));
+    setlocale(LC_ALL, "");      //utf-8 for polish characters
+
+    for (int i =0; i<4; i++) {
+        ant mrowka;
+        antsVector.push_back(mrowka);
+    }
+    startMenu();
+
 
     return 0;
 }
 
-/*  Starts curses and populates the passed struct  */
+void startMenu() {
 
-void start_curses(struct curinfo * info)
-{
-    if ( (info->main_window = initscr()) == NULL ) {
-        fprintf(stderr, "Error calling initscr()\n");
-        exit(EXIT_FAILURE);
-    }
+    initscr();
+    getmaxyx(stdscr, height, width);    //for scaling interface
+    int mapCornerWidth = width/2-25;
+    int mapCornerHeight = height/2-15;
 
-    keypad(stdscr, TRUE);
-    timeout(0);
-    raw();
-    nonl();
-    noecho();
-    info->old_cursor = curs_set(0);
-    refresh();
+    if (has_colors()) { //sprawdzenie, czy konsola obsługuje kolory
+        start_color();
+        init_pair(1, COLOR_GREEN, COLOR_BLACK);
+        attron(COLOR_PAIR(1));
+
+        printMap(mapCornerWidth,mapCornerHeight);
+
+
+        for (int k =0;k<4;k++) {
+            if (antsVector[k].getGender() == 1) {
+                mvprintw(mapCornerHeight+1+antsVector[k].getPositionAntY()*3, mapCornerWidth+5*antsVector[k].getPositionAntX()+2,"f");
+            } else if (antsVector[k].getGender() == 0) {
+                mvprintw(mapCornerHeight+1+antsVector[k].getPositionAntY()*3, mapCornerWidth+5*antsVector[k].getPositionAntX()+2,"m");
+            }
+
+        }
+        //ant mrowka;
+        //mrowka.addFood();
+        //std::string tekst = patch::to_string(mrowka.getPositionAntX());
+        //mvprintw(mapCornerHeight +1,mapCornerWidth+2 , tekst.c_str());
+
+
+        getch();
+        endwin();
+        attroff(COLOR_PAIR(1));
+
+    } else printf("\nTwoja konsola nie obsługuje kolorów\n");
+
+    getch();
+    endwin();
+
 }
 
-/*  Stops curses and cleans up  */
+void boxAround( int y, int x, int h, int w ) {
+    move( y, x );
+    addch (ACS_ULCORNER);   // upper left corner
+    int j;
+    for (j = 0;  j < w;  ++j)
+        addch (ACS_HLINE);
+    addch (ACS_URCORNER);   // upper right
 
-void stop_curses(struct curinfo * info)
-{
-    delwin(info->main_window);
-    curs_set(info->old_cursor);
-    endwin();
-    refresh();
+    for( j = 0; j < h; ++j ) {
+        move(  y+1+j, x );
+        addch (ACS_VLINE);
+        move( y+1+j, x+w+1 );
+        addch (ACS_VLINE);
+    }
+
+    move( y+h+1,x );
+    addch (ACS_LLCORNER);   // lower left corner
+
+    for (j = 0;  j < w;  ++j)
+        addch (ACS_HLINE);
+    addch (ACS_LRCORNER);   // lower right
+}
+
+void printMap(int mapCornerWidth, int mapCornerHeight) {
+
+
+    for (int i = 0;i<10;i++) {
+        for (int j = 0; j<10;j++) {
+            boxAround(mapCornerHeight+i*3,mapCornerWidth+j*5,1,3);
+        }
+    }
 }
