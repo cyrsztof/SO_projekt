@@ -96,7 +96,7 @@ void startMenu() {
                 refresh();
             }
         }
-        timeout(10000);
+        timeout(40000);
     } else printf("\nTwoja konsola nie obsługuje kolorów\n");
 
 
@@ -153,26 +153,31 @@ void printAnts (int mapCornerHeight, int mapCornerWidth) {
 
             switch ((map[i][j])){
                 case (0):
-                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"");
+                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"");       //blank fields - nothing there
                     break;
                 case (1):
                     attron(COLOR_PAIR(3));
-                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"f");
+                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"f");      //female ant
                     attroff(COLOR_PAIR(3));
                     break;
                 case (2):
                     attron(COLOR_PAIR(2));
-                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"m");
+                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"m");      //male ant
                     attroff(COLOR_PAIR(2));
                     break;
                 case (3):
                     attron(COLOR_PAIR(4));
-                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"x");
+                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"x");      //male ant and female ant
+                    attroff(COLOR_PAIR(4));
+                    break;
+                case (4):
+                    attron(COLOR_PAIR(4));
+                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"&");      //more ants (or 2 of the same gender)
                     attroff(COLOR_PAIR(4));
                     break;
                 case (-1):
                     attron(COLOR_PAIR(4));
-                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"@");
+                    mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"@");      //food
                     attroff(COLOR_PAIR(4));
                     break;
                 default:
@@ -279,20 +284,27 @@ void countAnts () {
                 if (antsVector[k].antPositionX == i && antsVector[k].antPositionY == j) {
                     switch(map[i][j]) {
                         case(-1):
-                            map[i][j] = antsVector[k].gender+1;
-                            antsVector[k].food = true;
-                            for(int n = 0; n <foodsVector.size();n++) {
-                                if (foodsVector[n].foodPositionX == i && foodsVector[n].foodPositionY == j) {
-                                    foodsVector.erase(foodsVector.begin()+n);
+                            map[i][j] = antsVector[k].gender + 1;
+                            if (antsVector[k].gender == 1 && antsVector[k].hasFood() == false) {
+                                antsVector[k].food = true;
+                                for (int n = 0; n < foodsVector.size(); n++) {
+                                    if (foodsVector[n].foodPositionX == i && foodsVector[n].foodPositionY == j) {
+                                        foodsVector.erase(foodsVector.begin() + n);
+                                    }
                                 }
                             }
                             break;
                         case(1):
-                            if (antsVector[k].gender == 1){
+
+                            if (antsVector[k].gender == 1 && antsVector[k].hasFood() == true){
+                                antsVector[k].hasFood() == false;
                                 ant ant;
                                 antsVector.push_back(ant);
                                 map[i][j] = 3;
-                            }
+                            } else if (antsVector[k].gender == 1) {
+                                map[i][j] = 3;
+                            } else
+                                map[i][j] = 4;
                             break;
                         case(2):
                             break;

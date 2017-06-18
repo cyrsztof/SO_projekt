@@ -1,2 +1,2 @@
 all:
-	g++ main.cpp -o projekt -lncurses
+	g++ main.cpp ant.cpp food.cpp -o projekt -lncursesw
