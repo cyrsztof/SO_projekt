@@ -6,11 +6,12 @@
 
 int width = 0;
 int height = 0;
-
+int speed = 1;
+int dead = 0;
 int mapCornerWidth = 0;
 int mapCornerHeight = 0;
 
-int map[10][10];          //0 - nothing, 1 - ant female, 2 - ant male, 3 - male + female, 4 - more ants, 10 - food...
+int map[10][10];          //0 - nothing, 1 - ant female, 2 - ant male, 3 - male + female, 4 - more ants, -1 - food...
 
 std::vector <ant> antsVector;
 std::vector <food> foodsVector;
@@ -23,6 +24,8 @@ void moveAnts(ant& ant);
 void initial();
 void startMenu();
 void countAnts();
+void createFood();
+
 
 pthread_t threadPrinting;
 pthread_t threadMoving;
@@ -37,11 +40,6 @@ int main (void) {
 
     initial();
     startMenu();
-
-
-
-   // usleep(200000);
-
 
     return 0;
 }
@@ -62,17 +60,16 @@ void startMenu() {
 
         timeout(0);
         while (true) {
-            sleep(1);
-
-            for (int i = 0; i < antsVector.size(); i++) {
-                int deadOrAlive = rand()%10000;
-                if (deadOrAlive>antsVector[i].age) {
-                    moveAnts(antsVector[i]);
-                } else {
+            sleep(speed);
+            for (int i = 0; i< antsVector.size();i++) {
+                int deadOrAlive = rand() % 30000;
+                if (deadOrAlive < antsVector[i].age) {
+                    dead++;
                     map[antsVector[i].antPositionX][antsVector[i].antPositionY] = 0;
                     antsVector.erase(antsVector.begin() + i);
+                } else {
+                    moveAnts(antsVector[i]);
                 }
-
             }
             erase();
             printMap(mapCornerWidth, mapCornerHeight);
@@ -81,20 +78,62 @@ void startMenu() {
 
             refresh();
             char c;
+            move(0,0);
             c=getch();
             if (c == 'q') {
 
                 endwin();
                 break;
+            } else if (c == 'w') {
+                createFood();
+            } else if (c == '\033') { // if the first value is esc
+                    getch(); // skip the [
+                    switch(getch()) { // the real value
+                        case 'A':
+                            // code for arrow up
+                            break;
+                        case 'B':
+                            // code for arrow down
+                            break;
+                        case 'D':
+                            // code for arrow left
+                            speed++;
+                            if (speed > 5) {
+                                speed = 5;
+                            }
+                            break;
+                        case 'C':
+                            // code for arrow right
+                            speed --;
+                            if (speed < 2) {
+                                speed = 1;
+                            }
+                            break;
+                    }
+                } else if (c == 'e') {
+                for (int i = 0; i < antsVector.size();i++) {
+                    dead++;
+                }
+                antsVector.clear();
             }
             init_pair(1, COLOR_GREEN, COLOR_BLACK);
 
             for (int i =0; i < antsVector.size();i++) {
+                int j =0;
+                if (i > height-1) {
+                    j = 1;
+                }
                 attron(COLOR_PAIR(1));
-                mvprintw(10+i, 10, "Wiek mrówki %u: %u", i,antsVector[i].age);
+                mvprintw(i%height, 1+j*20, "Wiek mrówki %u: %u", i,antsVector[i].age);
                 attroff(COLOR_PAIR(1));
                 refresh();
             }
+            attron(COLOR_PAIR(2));
+            mvprintw(1, width-15,"Jedzenie: %u", foodsVector.size() );
+            mvprintw(2, width-15,"Mrówki:   %u", antsVector.size() );
+            mvprintw(3, width-15,"Zmarło:   %u", dead);
+            attroff(COLOR_PAIR(2));
+            refresh();
         }
         timeout(40000);
     } else printf("\nTwoja konsola nie obsługuje kolorów\n");
@@ -126,7 +165,17 @@ void boxAround( int y, int x, int h, int w ) {
         addch (ACS_HLINE);
     addch (ACS_LRCORNER);   // lower right
 }
-
+void createFood() {
+    bool check = true;
+    while (check) {
+        food food;
+        if (map[food.foodPositionX][food.foodPositionY] == 0) {
+            map [food.foodPositionX][food.foodPositionY] = -1;
+            foodsVector.push_back(food);
+            check = false;
+        }
+    }
+}
 void printMap(int mapCornerWidth, int mapCornerHeight) {
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
     init_pair(2, COLOR_RED, COLOR_BLACK);
@@ -198,18 +247,9 @@ void initial() {
     }
 
     for (int i = 0; i < 20; i++) {         //creating some start food
-        bool check = true;
-        while (check) {
-            food food;
-            if (map[food.foodPositionX][food.foodPositionY] == 0) {
-                map [food.foodPositionX][food.foodPositionY] = -1;
-                foodsVector.push_back(food);
-                check = false;
-            }
-        }
-
+        createFood();
     }
-    for (int i = 0; i < 8; i++) {          //creating some start ants
+    for (int i = 0; i < 10; i++) {          //creating some start ants
         bool check = true;
         while (check) {
             ant ant;
@@ -231,40 +271,25 @@ void moveAnts(ant& ant) {
     switch (i) {
         case(0): //moving up
             if (ant.antPositionY > 0) {
-                //map[ant.antPositionX][ant.antPositionY] = 0;
-
                 ant.antPositionY -= 1;
-                //map[ant.antPositionX][ant.antPositionY] = ant.gender+1;
-
             }
             break;
         case(1): //moving right
             if (ant.antPositionX < 9) {
-                //map[ant.antPositionX][ant.antPositionY] = 0;
-
                 ant.antPositionX +=1;
-               // map[ant.antPositionX][ant.antPositionY] = ant.gender+1;
             }
             break;
         case(2): //moving down
             if (ant.antPositionY <9) {
-              //  map[ant.antPositionX][ant.antPositionY] = 0;
-
                 ant.antPositionY += 1;
-                //map[ant.antPositionX][ant.antPositionY] = ant.gender+1;
-
             }
             break;
         case(3): ;//moving left
             if (ant.antPositionX>0) {
-               // map[ant.antPositionX][ant.antPositionY] = 0;
-
                 ant.antPositionX -= 1;
-               // map[ant.antPositionX][ant.antPositionY] = ant.gender+1;
             }
             break;
     }
-    mvprintw(1,1,"RUSZAM SIĘ");
 }
 void countAnts () {
     for (int i = 0; i < 10; i++) {
@@ -285,8 +310,8 @@ void countAnts () {
                     switch(map[i][j]) {
                         case(-1):
                             map[i][j] = antsVector[k].gender + 1;
-                            if (antsVector[k].gender == 1 && antsVector[k].hasFood() == false) {
-                                antsVector[k].food = true;
+                            if (antsVector[k].gender == 1 && !antsVector[k].hasFood()) {
+                                antsVector[k].addFood();
                                 for (int n = 0; n < foodsVector.size(); n++) {
                                     if (foodsVector[n].foodPositionX == i && foodsVector[n].foodPositionY == j) {
                                         foodsVector.erase(foodsVector.begin() + n);
@@ -296,21 +321,51 @@ void countAnts () {
                             break;
                         case(1):
 
-                            if (antsVector[k].gender == 1 && antsVector[k].hasFood() == true){
-                                antsVector[k].hasFood() == false;
+                            if (antsVector[k].gender == 1 && antsVector[k].hasFood()){
+                                antsVector[k].removeFood();
                                 ant ant;
                                 antsVector.push_back(ant);
                                 map[i][j] = 3;
-                            } else if (antsVector[k].gender == 1) {
+                            } else if (antsVector[k].gender == 1 && !antsVector[k].hasFood()) {
                                 map[i][j] = 3;
                             } else
                                 map[i][j] = 4;
                             break;
                         case(2):
+                            if (antsVector[k].gender == 1){
+                                map[i][j] = 4;
+                            } else {
+                                map[i][j] = 3;
+                                for (int l = 0; l < antsVector.size();l++) {
+                                    if (antsVector[l].antPositionX == i && antsVector[l].antPositionY == j && antsVector[l].gender == 1 && antsVector[l].hasFood()) {
+                                        bool check = true;
+                                        if (antsVector.size()+foodsVector.size() >= 100){
+                                            check = false;
+                                        }
+                                        while (check) {
+                                            ant ant;
+                                            for (int n = 0; n < antsVector.size();n++) {
+                                                if (antsVector[n].antPositionX == ant.antPositionX && antsVector[n].antPositionY == ant.antPositionY) {
+                                                    continue;
+                                                } else {
+                                                    antsVector[l].removeFood();
+                                                    antsVector.push_back(ant);
+                                                    check = false;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+
                             break;
                         case(3):
+                            map[i][j] = 4;
                             break;
                         case(4):
+                            map[i][j] = 4;
                             break;
                         default:
                             map[i][j] = antsVector[k].gender+1;

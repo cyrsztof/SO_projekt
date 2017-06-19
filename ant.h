@@ -33,7 +33,7 @@ public:
     int antPositionY;
     bool food;
 
-    ant (int age = 0, int gender = 0,   int antPositionX = 0,   int antPositionY = 0,   bool food = 0) {
+    ant (int age = 0, int gender = 0,   int antPositionX = 0,   int antPositionY = 0,   bool food = false) {
 
     gender = rand() %2;
     antPositionX = rand() % 10;
@@ -45,13 +45,7 @@ public:
     this->antPositionX = antPositionX;
     this->antPositionY = antPositionY;
 }
-    ant (int antPositionX, int antPositionY) {
-        this->age = 0;
-        this->food = 0;
-        this->gender = rand()%2;
-        this->antPositionX = antPositionX;
-        this->antPositionY = antPositionY;
-    }
+
 
 
     void changeAntPositionX(int newAntPositionX) {
@@ -71,11 +65,11 @@ public:
     }
 
     void addFood() {
-    food = 1;
+    food = true;
     }
 
     void removeFood() {
-    food = 0;
+    food = false;
     }
 
 
