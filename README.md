@@ -5,7 +5,7 @@ The project is a simulation of ants living on the 10x10 map.
 
 # Game Logic
 You are the God now! These little creatures are down there looking for some food and partner. You decide if you want to feed or kill them! Let the colony grow or annihilate it! There are some rules in this awesome, almost OPEN world:
-- food can be picked only by the male ants (because according to some Polish MEP "women are weaker, smaller and less intelligent than man"[4]),
+- food can be picked only by the male ants (because according to the Polish MEP "women are weaker, smaller and less intelligent than man"[4]),
 - male ant can have only one piece of the food at times (even though they are stronger, they are not that strong to catch them all),
 - if male ant meets female ant and it has food, the female ant receives the gift (food is consumed), they both have some nice quick time and new ant is being produced (not pregnant time implemented yet),
 - every ant is aging with every move, random move is generated for every ant each second (or faster if game speed is accelerated), the older an ant is, the greater chance of dying,
