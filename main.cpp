@@ -10,8 +10,8 @@ int speed = 1;
 int dead = 0;
 int mapCornerWidth = 0;
 int mapCornerHeight = 0;
-
 int map[10][10];          //0 - nothing, 1 - ant female, 2 - ant male, 3 - male + female, 4 - more ants, -1 - food...
+char c;
 
 std::vector <ant> antsVector;
 std::vector <food> foodsVector;
@@ -20,16 +20,19 @@ std::vector <food> foodsVector;
 void boxAround( int y, int x, int h, int w );
 void printMap(int mapCornerWidth, int mapCornerHeight);
 void printAnts (int mapCornerHeight, int mapCornerWidth);
-void moveAnts(ant& ant);
+//void moveAnts(std::vector <ant> antsVector);
+void moveAnts(std::vector <ant> &antsVector);
 void initial();
 void startMenu();
 void countAnts();
 void createFood();
+void* mainGame(void *);
+//void* moveAllAnts(void *arg);
 
-
+pthread_t threadMain;
 pthread_t threadPrinting;
 pthread_t threadMoving;
-
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //mutex
 
 
 
@@ -38,114 +41,167 @@ int main (void) {
     srand(time(NULL));          //for rand() function
     setlocale(LC_ALL, "");      //utf-8 for polish characters
 
-    initial();
-    
-    //pthread_create(&threadPrinting, NULL, startMenu, NULL);
     startMenu();
+    initial();
+
+    pthread_create(&threadMain, NULL, mainGame, NULL); //main thread
+
+
+    pthread_join(threadMain, NULL);
+    pthread_join(threadPrinting, NULL);
+    pthread_join(threadMoving, NULL);
 
     return 0;
 }
+void* mainGame(void *) {
 
-void startMenu() {
-
+    erase();
     initscr();
+    start_color();
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);     //colors for printing in ncurses
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+    init_pair(3, COLOR_WHITE, COLOR_BLACK);
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_CYAN, COLOR_BLACK);
+
     getmaxyx(stdscr, height, width);    //for scaling interface
     int mapCornerWidth = width/2-25;
     int mapCornerHeight = height/2-15;
 
-    if (has_colors()) { //sprawdzenie, czy konsola obsługuje kolory
-        start_color();
 
-        printMap(mapCornerWidth, mapCornerHeight); //printing the map lines
+    printMap(mapCornerWidth, mapCornerHeight); //printing the map lines
+    printAnts(mapCornerHeight, mapCornerWidth);
+    refresh();
+
+    timeout(0);
+    while (true) {
+        usleep(1000000/speed);
+//        for (int i = 0; i< antsVector.size();i++) {
+//            int deadOrAlive = rand() % 30000;
+//            if (deadOrAlive < antsVector[i].age) {
+//                dead++;
+//                map[antsVector[i].antPositionX][antsVector[i].antPositionY] = 0;
+//                antsVector.erase(antsVector.begin() + i);
+//            } else {
+//                moveAnts(antsVector[i]);
+//            }
+//        }
+        moveAnts(antsVector);
+        //pthread_create(&threadMoving,NULL, moveAnts, antsVector);
+        erase();
+        printMap(mapCornerWidth, mapCornerHeight);
+        countAnts();
         printAnts(mapCornerHeight, mapCornerWidth);
         refresh();
 
-        timeout(0);
-        while (true) {
-            sleep(speed);
-            for (int i = 0; i< antsVector.size();i++) {
-                int deadOrAlive = rand() % 30000;
-                if (deadOrAlive < antsVector[i].age) {
-                    dead++;
-                    map[antsVector[i].antPositionX][antsVector[i].antPositionY] = 0;
-                    antsVector.erase(antsVector.begin() + i);
-                } else {
-                    moveAnts(antsVector[i]);
-                }
-            }
-            erase();
-            printMap(mapCornerWidth, mapCornerHeight);
-            countAnts();
-            printAnts(mapCornerHeight, mapCornerWidth);
-
-            refresh();
-            char c;
-            move(0,0);
-            c=getch();
-            if (c == 'q') {
-
-                endwin();
-                break;
-            } else if (c == 'w') {
-                createFood();
-            } else if (c == '\033') { // if the first value is esc
-                    getch(); // skip the [
-                    switch(getch()) { // the real value
-                        case 'A':
-                            // code for arrow up
-                            break;
-                        case 'B':
-                            // code for arrow down
-                            break;
-                        case 'D':
-                            // code for arrow left
-                            speed++;
-                            if (speed > 5) {
-                                speed = 5;
-                            }
-                            break;
-                        case 'C':
-                            // code for arrow right
-                            speed --;
-                            if (speed < 2) {
-                                speed = 1;
-                            }
-                            break;
+        move(0,0);
+        c=getch();
+        if (c == 'q') {
+            endwin();
+            break;
+        } else if (c == 'w') {
+            createFood();
+        } else if (c == '\033') { // if the first value is esc
+            getch(); // skip the [
+            switch(getch()) { // the real value
+                    case 'C':
+                    // code for arrow left
+                    speed++;
+                    if (speed > 9) {
+                        speed = 10;
                     }
-                } else if (c == 'e') {
-                for (int i = 0; i < antsVector.size();i++) {
-                    dead++;
-                }
-                antsVector.clear();
+                    break;
+                case 'D':
+                    // code for arrow right
+                    speed --;
+                    if (speed < 2) {
+                        speed = 1;
+                    }
+                    break;
             }
-            init_pair(1, COLOR_GREEN, COLOR_BLACK);
-
-            for (int i =0; i < antsVector.size();i++) {
-                int j =0;
-                if (i > height-1) {
-                    j = 1;
-                }
-                attron(COLOR_PAIR(1));
-                mvprintw(i%height, 1+j*20, "Wiek mrówki %u: %u", i,antsVector[i].age);
-                attroff(COLOR_PAIR(1));
-                refresh();
+        } else if (c == 'e') {
+            for (int i = 0; i < antsVector.size();i++) {
+                dead++;
             }
-            attron(COLOR_PAIR(2));
-            mvprintw(1, width-15,"Jedzenie: %u", foodsVector.size() );
-            mvprintw(2, width-15,"Mrówki:   %u", antsVector.size() );
-            mvprintw(3, width-15,"Zmarło:   %u", dead);
-            attroff(COLOR_PAIR(2));
+            antsVector.clear();
+        } else if (c == 'r') {
+            antsVector.erase(antsVector.begin());
+        }
+        init_pair(1, COLOR_GREEN, COLOR_BLACK);
+        for (int i =0; i < antsVector.size();i++) {
+            int j =0;
+            if (i > height-1) {
+                j = 1;
+            }
+            attron(COLOR_PAIR(1));
+            mvprintw(i%height, 1+j*20, "Wiek mrówki %u: %u", i,antsVector[i].age);
+            attroff(COLOR_PAIR(1));
             refresh();
         }
+        attron(COLOR_PAIR(2));
+        mvprintw(1, width-15,"Jedzenie: %u", foodsVector.size() );
+        mvprintw(2, width-15,"Mrówki:   %u", antsVector.size() );
+        mvprintw(3, width-15,"Zmarło:   %u", dead);
+        attroff(COLOR_PAIR(2));
+        refresh();
+    }
+    timeout(40000);
+    endwin();
+}
+void startMenu() {
+
+    initscr();
+    start_color();
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);     //colors for printing in ncurses
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+    init_pair(3, COLOR_WHITE, COLOR_BLACK);
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_CYAN, COLOR_BLACK);
+
+    getmaxyx(stdscr, height, width);    //for scaling interface
+    int mapCornerWidth = width/2-25;
+    int mapCornerHeight = height/2-15;
+    int movingFont = 0;
+    int i = 0;
+    if (has_colors()) { //checking if console can use colors
+        timeout(0);
+        char text[] = "Obudziłeś się w cudownym świecie...";
+        char text2[] = "Pełnym mrówek...";
+        char text3[] = "Ty tu jesteś Bogiem...";
+        char text4[] = "Panda trzy...";
+        while (i<15) {
+            erase();
+            attron(COLOR_PAIR(2));
+            if (movingFont < 4){
+                mvprintw((height / 2) + movingFont % 4, (width / 2 - (sizeof(text) / 2)) - movingFont % 4, text);
+            } if (movingFont > 3 && movingFont < 8) {
+                mvprintw((height / 2)+movingFont%4, (width / 2 - (sizeof(text2) / 2))-movingFont%4, text2);
+            } if (movingFont > 7 && movingFont < 12) {
+                mvprintw((height / 2)+movingFont%4, (width / 2 - (sizeof(text3) / 2))-movingFont%4, text3);
+            } if (movingFont > 11) {
+                mvprintw((height / 2)+movingFont%4, (width / 2 - (sizeof(text4) / 2))-movingFont%4, text4);
+            }
+
+            attroff(COLOR_PAIR(2));
+            refresh();
+            sleep(1);
+            movingFont++;
+            i++;
+        }
         timeout(40000);
+        erase();
+        attron(COLOR_PAIR(3));
+        char text5[] = "Naciśnij dowolny przycisk, by rozpocząć";
+        mvprintw((height / 2), (width / 2 - (sizeof(text5) / 2)), text5);
+        attroff(COLOR_PAIR(3));
         getch();
+        refresh();
+        endwin();
+
     } else printf("\nTwoja konsola nie obsługuje kolorów\n");
 
 
-    endwin();
-
 }
-
 void boxAround( int y, int x, int h, int w ) {
     move( y, x );
     addch (ACS_ULCORNER);   // upper left corner
@@ -198,6 +254,7 @@ void printAnts (int mapCornerHeight, int mapCornerWidth) {
     init_pair(2, COLOR_RED, COLOR_BLACK);
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_CYAN, COLOR_BLACK);
 
     for (int i = 0; i <10; i++) {
         for (int j = 0; j < 10; j++) {
@@ -208,9 +265,9 @@ void printAnts (int mapCornerHeight, int mapCornerWidth) {
                     mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"");       //blank fields - nothing there
                     break;
                 case (1):
-                    attron(COLOR_PAIR(3));
+                    attron(COLOR_PAIR(5));
                     mvprintw(mapCornerHeight+1+i*3, mapCornerWidth+5*j+2,"f");      //female ant
-                    attroff(COLOR_PAIR(3));
+                    attroff(COLOR_PAIR(5));
                     break;
                 case (2):
                     attron(COLOR_PAIR(2));
@@ -266,34 +323,53 @@ void initial() {
 
 
 }
-void moveAnts(ant& ant) {
 
-    ant.age ++;
+void moveAnts(std::vector <ant> &antsVector) {
 
-    int i = rand()%4;
-    switch (i) {
-        case(0): //moving up
-            if (ant.antPositionY > 0) {
-                ant.antPositionY -= 1;
-            }
-            break;
-        case(1): //moving right
-            if (ant.antPositionX < 9) {
-                ant.antPositionX +=1;
-            }
-            break;
-        case(2): //moving down
-            if (ant.antPositionY <9) {
-                ant.antPositionY += 1;
-            }
-            break;
-        case(3): ;//moving left
-            if (ant.antPositionX>0) {
-                ant.antPositionX -= 1;
-            }
-            break;
+
+    for (int k = 0; k < antsVector.size();k++) {
+        antsVector[k].age ++;
+
+        int i = rand()%4;
+        switch (i) {
+            case(0): //moving up
+                if (antsVector[k].antPositionY > 0) {
+                    antsVector[k].antPositionY -= 1;
+                }
+                break;
+            case(1): //moving right
+                if (antsVector[k].antPositionX < 9) {
+                    antsVector[k].antPositionX +=1;
+                }
+                break;
+            case(2): //moving down
+                if (antsVector[k].antPositionY <9) {
+                    antsVector[k].antPositionY += 1;
+                }
+                break;
+            case(3): ;//moving left
+                if (antsVector[k].antPositionX>0) {
+                    antsVector[k].antPositionX -= 1;
+                }
+                break;
+        }
     }
 }
+
+
+//void* moveAllAnts(void *arg) {
+//
+//    for (int i = 0; i< antsVector.size();i++) {
+//        int deadOrAlive = rand() % 30000;
+//        if (deadOrAlive < antsVector[i].age) {
+//            dead++;
+//            map[antsVector[i].antPositionX][antsVector[i].antPositionY] = 0;
+//            antsVector.erase(antsVector.begin() + i);
+//        } else {
+//            moveAnts(antsVector[i]);
+//        }
+//    }
+//}
 void countAnts () {
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
