@@ -1,5 +1,18 @@
-# SO_projekt
-my university multithreading project for Operating System using pthreads and ncurses in c++ for Linux
+## SO_projekt
+My university multithreading project for Operating System using pthreads and ncurses in c++ for Linux. 
+The project is a simulation of ants living on the 10x10 map.
+
+# Symbols
+
+There are few symbols, that can show up on the screen.
+First of all - the 10x10 map is represented as green squares. Inside of the squares can be fill with:
+- nothing (simply empty square means there is nothing on this segment of the map),
+- red <span style="color:red"> **m** </span> represents male ant,
+- cyan <span style="color:cyan"> **f** </span> represnts female ant,
+- yellow <span style="color:yellow"> **@**</span> represents food,
+- yellow <span style="color:yellow"> **x**</span> represents a pair of female and male ant,
+- yellow <span style="color:yellow"> **&**</span> represents a pair of ants of the same gender or more than 2 ants.
+
 
 ## Bibliography:
 - [Multithreading in Linux (polish)](http://m.jedynak.pl/systemy/watki-referat.pdf)
@@ -42,3 +55,4 @@ Celem projektu jest opracowanie prostej wielowątkowej aplikacji dla systemu Lin
 
 * *drobna uwaga co do wycieków z ncurses: http://invisible-island.net/ncurses/ncurses.faq.html… 
 * **możliwe jest wtedy generowanie PDFa: https://kevin.deldycke.com/…/…/how-to-generate-pdf-markdown/
+
