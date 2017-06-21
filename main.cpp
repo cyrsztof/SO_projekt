@@ -39,6 +39,8 @@ int main (void) {
     setlocale(LC_ALL, "");      //utf-8 for polish characters
 
     initial();
+    
+    //pthread_create(&threadPrinting, NULL, startMenu, NULL);
     startMenu();
 
     return 0;
@@ -136,6 +138,7 @@ void startMenu() {
             refresh();
         }
         timeout(40000);
+        getch();
     } else printf("\nTwoja konsola nie obsługuje kolorów\n");
 
 
