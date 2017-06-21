@@ -27,6 +27,7 @@ Basic actions can be perform using keyboard:
 - **q** - quit the game,
 - **w** - add food,
 - **e** - annihilate whole colony,
+- **r** - kill the oldest ant,
 - **right arrow** - accelerate time (up to 10x faster!),
 - **left arrow** - slow down time (1s delay is the slower you can get!),
 
