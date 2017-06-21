@@ -1,7 +1,7 @@
 //
 // Created by krzysztof-c on 17.06.17.
 //
-
+#pragma once
 #ifndef SO_PROJEKT_ANT_H
 #define SO_PROJEKT_ANT_H
 #include <iostream>
@@ -14,6 +14,8 @@
 #include "string"
 #include "vector"
 #include <sstream>
+#include <functional>
+
 namespace patch         //small patch for std::string, since it wasn't working with my compiler
 {
     template < typename T > std::string to_string( const T& n )

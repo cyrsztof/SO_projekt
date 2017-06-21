@@ -1,6 +1,7 @@
 
 #include "food.h"
 #include "ant.h"
+#include <functional>
 
 
 
@@ -12,26 +13,30 @@ int mapCornerWidth = 0;
 int mapCornerHeight = 0;
 int map[10][10];          //0 - nothing, 1 - ant female, 2 - ant male, 3 - male + female, 4 - more ants, -1 - food...
 char c;
-
+int counter = 0;
+int bless = 1;
+int kill = -1;
 std::vector <ant> antsVector;
 std::vector <food> foodsVector;
-
 
 void boxAround( int y, int x, int h, int w );
 void printMap(int mapCornerWidth, int mapCornerHeight);
 void printAnts (int mapCornerHeight, int mapCornerWidth);
-//void moveAnts(std::vector <ant> antsVector);
-void moveAnts(std::vector <ant> &antsVector);
+
 void initial();
 void startMenu();
 void countAnts();
 void createFood();
-void* mainGame(void *);
-//void* moveAllAnts(void *arg);
+void moveAnts(std::vector <ant> &antsVector);
 
+void* blessOrKill(void *arg);
+void* mainGame(void *);
+
+bool threadAddingStart = false;
+bool threadRemovingStart = false;
 pthread_t threadMain;
-pthread_t threadPrinting;
-pthread_t threadMoving;
+pthread_t threadAdding;
+pthread_t threadRemoving;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //mutex
 
 
@@ -48,10 +53,39 @@ int main (void) {
 
 
     pthread_join(threadMain, NULL);
-    pthread_join(threadPrinting, NULL);
-    pthread_join(threadMoving, NULL);
+    pthread_join(threadAdding, NULL);
+    pthread_join(threadRemoving, NULL);
 
     return 0;
+}
+void* blessOrKill(void *arg) {
+    int choice = *(int *) arg;
+
+   for (int i = 0; i<100; i++) {
+       pthread_mutex_lock(&mutex);
+       counter ++;
+       pthread_mutex_unlock(&mutex);
+
+       if (choice == -1&&antsVector.size()>0) {
+
+           antsVector.erase(antsVector.begin());
+       } else if (choice == 1){
+
+           bool check = true;
+           while (check) {
+               ant ant;
+               if (map[ant.antPositionX][ant.antPositionY] == 0) {
+                   check = false;
+                   map[ant.antPositionX][ant.antPositionY] = ant.gender + 1;
+                   antsVector.push_back(ant);
+               }
+           }
+       }
+       sleep(1);
+   }
+
+    pthread_exit(NULL);
+
 }
 void* mainGame(void *) {
 
@@ -65,46 +99,61 @@ void* mainGame(void *) {
     init_pair(5, COLOR_CYAN, COLOR_BLACK);
 
     getmaxyx(stdscr, height, width);    //for scaling interface
-    int mapCornerWidth = width/2-25;
-    int mapCornerHeight = height/2-15;
+    mapCornerWidth = width / 2 - 25;
+    mapCornerHeight = height / 2 - 15;
 
-
-    printMap(mapCornerWidth, mapCornerHeight); //printing the map lines
-    printAnts(mapCornerHeight, mapCornerWidth);
     refresh();
+
 
     timeout(0);
     while (true) {
-        usleep(1000000/speed);
-//        for (int i = 0; i< antsVector.size();i++) {
-//            int deadOrAlive = rand() % 30000;
-//            if (deadOrAlive < antsVector[i].age) {
-//                dead++;
-//                map[antsVector[i].antPositionX][antsVector[i].antPositionY] = 0;
-//                antsVector.erase(antsVector.begin() + i);
-//            } else {
-//                moveAnts(antsVector[i]);
-//            }
-//        }
+
+        usleep(1000000 / speed);
         moveAnts(antsVector);
-        //pthread_create(&threadMoving,NULL, moveAnts, antsVector);
         erase();
         printMap(mapCornerWidth, mapCornerHeight);
         countAnts();
         printAnts(mapCornerHeight, mapCornerWidth);
         refresh();
 
-        move(0,0);
-        c=getch();
+        move (0,0);
+        bool check2 = true;
+
+        c = getch();
         if (c == 'q') {
             endwin();
+            pthread_cancel(threadMain);
+            pthread_cancel(threadAdding);
+            pthread_cancel(threadRemoving);
             break;
         } else if (c == 'w') {
             createFood();
         } else if (c == '\033') { // if the first value is esc
             getch(); // skip the [
-            switch(getch()) { // the real value
-                    case 'C':
+            switch (getch()) { // the real value
+                case 'A':
+                    //miracle
+                    if(threadAddingStart) {
+                        threadAddingStart = false;
+                        pthread_cancel(threadAdding);
+                    } else {
+                        threadAddingStart = true;
+                        pthread_create(&threadAdding, NULL, blessOrKill, &bless );
+                    }
+                    break;
+
+                case 'B':
+                    //annihilation
+                    if (threadRemovingStart) {
+                        threadRemovingStart = false;
+                        pthread_cancel((threadRemoving));
+                    } else {
+                        threadRemovingStart = true;
+                        pthread_create(&threadRemoving, NULL, blessOrKill, &kill);
+                    }
+                    break;
+
+                case 'C':
                     // code for arrow left
                     speed++;
                     if (speed > 9) {
@@ -113,40 +162,47 @@ void* mainGame(void *) {
                     break;
                 case 'D':
                     // code for arrow right
-                    speed --;
+                    speed--;
                     if (speed < 2) {
                         speed = 1;
                     }
                     break;
             }
+            refresh();
+
         } else if (c == 'e') {
-            for (int i = 0; i < antsVector.size();i++) {
+            for (int i = 0; i < antsVector.size(); i++) {
                 dead++;
             }
             antsVector.clear();
-        } else if (c == 'r') {
+        } else if (c == 'r' && antsVector.size() > 0) {
             antsVector.erase(antsVector.begin());
-        }
-        init_pair(1, COLOR_GREEN, COLOR_BLACK);
-        for (int i =0; i < antsVector.size();i++) {
-            int j =0;
-            if (i > height-1) {
-                j = 1;
+}
+            init_pair(1, COLOR_GREEN, COLOR_BLACK);
+            for (int i =0; i < antsVector.size();i++) {
+                int j =0;
+                if (i > height-1) {
+                    j = 1;
+                }
+                attron(COLOR_PAIR(1));
+                mvprintw(i%height, 1+j*20, "Wiek mrówki %u: %u", i,antsVector[i].age);
+                attroff(COLOR_PAIR(1));
+                refresh();
             }
-            attron(COLOR_PAIR(1));
-            mvprintw(i%height, 1+j*20, "Wiek mrówki %u: %u", i,antsVector[i].age);
-            attroff(COLOR_PAIR(1));
-            refresh();
-        }
-        attron(COLOR_PAIR(2));
-        mvprintw(1, width-15,"Jedzenie: %u", foodsVector.size() );
-        mvprintw(2, width-15,"Mrówki:   %u", antsVector.size() );
-        mvprintw(3, width-15,"Zmarło:   %u", dead);
-        attroff(COLOR_PAIR(2));
         refresh();
-    }
-    timeout(40000);
-    endwin();
+
+        attron(COLOR_PAIR(2));
+            mvprintw(1, width-15,"Jedzenie: %u", foodsVector.size() );
+            mvprintw(2, width-15,"Mrówki:   %u", antsVector.size() );
+            mvprintw(3, width-15,"Zmarło:   %u", dead);
+            mvprintw(5, width-18,"Święty licznik: %u", counter);
+            refresh();
+            attroff(COLOR_PAIR(2));
+
+        }
+        timeout(10000);
+        endwin();
+
 }
 void startMenu() {
 
@@ -159,8 +215,8 @@ void startMenu() {
     init_pair(5, COLOR_CYAN, COLOR_BLACK);
 
     getmaxyx(stdscr, height, width);    //for scaling interface
-    int mapCornerWidth = width/2-25;
-    int mapCornerHeight = height/2-15;
+    mapCornerWidth = width/2-25;
+    mapCornerHeight = height/2-15;
     int movingFont = 0;
     int i = 0;
     if (has_colors()) { //checking if console can use colors
@@ -203,6 +259,7 @@ void startMenu() {
 
 }
 void boxAround( int y, int x, int h, int w ) {
+
     move( y, x );
     addch (ACS_ULCORNER);   // upper left corner
     int j;
@@ -241,6 +298,7 @@ void printMap(int mapCornerWidth, int mapCornerHeight) {
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_YELLOW, COLOR_BLACK);
     attron(COLOR_PAIR(1));
+
     for (int i = 0;i<10;i++) {
         for (int j = 0; j<10;j++) {
             boxAround(mapCornerHeight+i*3,mapCornerWidth+j*5,1,3);
@@ -323,13 +381,15 @@ void initial() {
 
 
 }
-
-void moveAnts(std::vector <ant> &antsVector) {
-
-
-    for (int k = 0; k < antsVector.size();k++) {
+void moveAnts(std::vector <ant> &antsVector){
+    for (int k = 0; k < (antsVector).size();k++) {
         antsVector[k].age ++;
-
+        int deadOrAlive = rand() % 30000;
+            if (deadOrAlive < antsVector[k].age) {
+                dead++;
+                map[antsVector[k].antPositionX][antsVector[k].antPositionY] = 0;
+                antsVector.erase(antsVector.begin() + k);
+            }
         int i = rand()%4;
         switch (i) {
             case(0): //moving up
@@ -355,21 +415,6 @@ void moveAnts(std::vector <ant> &antsVector) {
         }
     }
 }
-
-
-//void* moveAllAnts(void *arg) {
-//
-//    for (int i = 0; i< antsVector.size();i++) {
-//        int deadOrAlive = rand() % 30000;
-//        if (deadOrAlive < antsVector[i].age) {
-//            dead++;
-//            map[antsVector[i].antPositionX][antsVector[i].antPositionY] = 0;
-//            antsVector.erase(antsVector.begin() + i);
-//        } else {
-//            moveAnts(antsVector[i]);
-//        }
-//    }
-//}
 void countAnts () {
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
