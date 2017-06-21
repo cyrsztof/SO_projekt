@@ -26,7 +26,7 @@ First of all - the 10x10 map is represented as green squares. Inside of the squa
 Basic actions can be perform using keyboard:
 - **q** - quit the game,
 - **w** - add food,
-- **e** annihilate whole colony,
+- **e** - annihilate whole colony,
 - **right arrow** - accelerate time (up to 10x faster!),
 - **left arrow** - slow down time (1s delay is the slower you can get!),
 
