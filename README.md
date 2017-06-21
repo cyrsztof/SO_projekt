@@ -30,6 +30,8 @@ Basic actions can be perform using keyboard:
 - **r** - kill the oldest ant,
 - **right arrow** - accelerate time (up to 10x faster!),
 - **left arrow** - slow down time (1s delay is the slower you can get!),
+- **up arrow** - enable/disable adding 1 ant every second!
+- **down arrow** - enable/disable removing 1 ant every second!
 
 ## Bibliography:
 - [1] [Multithreading in Linux (polish)](http://m.jedynak.pl/systemy/watki-referat.pdf)
